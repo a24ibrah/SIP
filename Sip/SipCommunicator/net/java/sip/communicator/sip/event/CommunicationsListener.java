@@ -57,6 +57,7 @@
  */
 package net.java.sip.communicator.sip.event;
 
+import java.awt.Event;
 import java.util.*;
 
 /**
@@ -92,6 +93,12 @@ public interface CommunicationsListener
     public void unregistering(RegistrationEvent evt);
 
     public void unregistered(RegistrationEvent evt);
+    
+    public void receiveBlockedList(BlockedListEvent evt);
+    
+    public void receiveFriendsList(BlockedListEvent evt);
+    
+    public void receivePrice(BlockedListEvent evt);
 //    public void callAccepted(CommunicationsEvent evt);
 //    public void callRinging(CommunicationsEvent evt);
 //    public void callTrying(CommunicationsEvent evt);

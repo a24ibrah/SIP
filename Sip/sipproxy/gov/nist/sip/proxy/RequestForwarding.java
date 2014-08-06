@@ -409,8 +409,7 @@ public class RequestForwarding {
                 else {
                     forwardRequestStatelessly(sipProvider,
                     clonedRequest,request,serverTransaction);
-                }
-                
+                }                
 /***************************************************************************/
 /********** 11. Set timer C                                       **********/
 /***************************************************************************/

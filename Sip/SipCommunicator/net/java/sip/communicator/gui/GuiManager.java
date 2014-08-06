@@ -1,3 +1,11 @@
+/*
+ * 
+ * 	Raptis Dimos - Dimitrios (dimosrap@yahoo.gr) - 03109770
+ *  Lazos Philippos (plazos@gmail.com) - 03109082
+ * 	Omada 29
+ * 
+ */
+
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
@@ -60,18 +68,26 @@ package net.java.sip.communicator.gui;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
+
 import net.java.sip.communicator.common.*;
 import net.java.sip.communicator.common.Console;
 import net.java.sip.communicator.gui.event.*;
+
 import java.awt.SystemColor;
+
 import javax.swing.plaf.metal.MetalLookAndFeel;
+
 import net.java.sip.communicator.gui.plaf.SipCommunicatorColorTheme;
+
 import java.awt.event.KeyEvent;
 import java.io.*;
+
 import net.java.sip.communicator.media.JMFRegistry;
 import net.java.sip.communicator.plugin.setup.*;
 import net.java.sip.communicator.gui.imp.*;
+import net.java.sip.communicator.sip.SipManager;
 import net.java.sip.communicator.sip.simple.event.*;
 
 /**
@@ -105,6 +121,12 @@ public class GuiManager
     private PhoneFrame       phoneFrame   = null;
     private ContactListFrame contactList  = null;
     private ConfigFrame      configFrame  = null;
+    private ForwardFrame	 forwardFrame = null;
+    private BlockFrame		 blockFrame	  = null;
+    private FriendFrame	 	 friendFrame = null;
+    private BlockedListFrame blockedListFrame = null;
+    private FriendsListFrame friendsListFrame = null;
+    private PriceFrame	 	 priceFrame   = null;
     private ArrayList        listeners    = null;
     private AlertManager     alertManager = null;
 
@@ -135,6 +157,12 @@ public class GuiManager
         phoneFrame    = new PhoneFrame(this);
         contactList   = new ContactListFrame();
         configFrame   = new ConfigFrame(phoneFrame);
+        forwardFrame  = new ForwardFrame();
+        blockFrame 	  = new BlockFrame();
+        friendFrame   = new FriendFrame();
+        blockedListFrame = new BlockedListFrame();
+        friendsListFrame = new FriendsListFrame();
+        priceFrame 	  = new PriceFrame();
         listeners     = new ArrayList();
         alertManager  = new AlertManager();
         logoPanel     = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -143,10 +171,34 @@ public class GuiManager
         initActionListeners();
         phoneFrame.contactBox.setModel(new ContactsComboBoxModel());
 
+        ForwardAction forwardAction = new ForwardAction();
+        ( (MenuBar) phoneFrame.jMenuBar1).addForwardAction(forwardAction);
+        //contactList.menuBar.addForwardAction(forwardAction);
+        
+        BlockAction blockAction = new BlockAction();
+        ( (MenuBar) phoneFrame.jMenuBar1).addBlockAction(blockAction);
+        //contactList.menuBar.addConfigAction(blockAction);
+        
+        BlockedListAction blockedListAction = new BlockedListAction();
+        ( (MenuBar) phoneFrame.jMenuBar1).addBlockedListAction(blockedListAction);
+        //contactList.menuBar.addConfigAction(blockAction);
+        
+        FriendAction friendAction = new FriendAction();
+        ( (MenuBar) phoneFrame.jMenuBar1).addFriendAction(friendAction);
+        //contactList.menuBar.addConfigAction(blockAction);
+        
+        FriendsListAction friendsListAction = new FriendsListAction();
+        ( (MenuBar) phoneFrame.jMenuBar1).addFriendsListAction(friendsListAction);
+        //contactList.menuBar.addConfigAction(blockAction);
+        
+        PriceAction priceAction = new PriceAction();
+        ( (MenuBar) phoneFrame.jMenuBar1).addPriceAction(priceAction);
+        //contactList.menuBar.addConfigAction(blockAction);
+        
         ConfigAction configAction = new ConfigAction();
         ( (MenuBar) phoneFrame.jMenuBar1).addConfigCallAction(configAction);
         contactList.menuBar.addConfigAction(configAction);
-
+        
         ConfigMediaAction configMediaAction = new ConfigMediaAction();
         ( (MenuBar) phoneFrame.jMenuBar1).addConfigMediaAction(configMediaAction);
         contactList.menuBar.addConfigMediaAction(configMediaAction);
@@ -230,7 +282,43 @@ public class GuiManager
     {
         configFrame.show();
     }
+    
+    public void showForwardFrame()
+    {
+        forwardFrame.show();
+    }
+    
+    public void showBlockFrame()
+    {
+        blockFrame.show();
+    }
+    
+    public void showFriendFrame()
+    {
+        friendFrame.show();
+    }
 
+    public void showBlockedListFrame(String b)
+    {
+    	blockedListFrame.setModal(true);
+    	blockedListFrame.updateBlockedUsers(b);
+    	blockedListFrame.show();
+    }
+    
+    public void showFriendsListFrame(String b)
+    {
+    	friendsListFrame.setModal(true);
+    	friendsListFrame.updateFriends(b);
+    	friendsListFrame.show();
+    }
+    
+    public void showPriceFrame(String b)
+    {
+    	priceFrame.setModal(true);
+    	priceFrame.updatePrice(b);
+    	priceFrame.show();
+    }
+    
     public void addVisualComponent(Component vComp)
     {
         if (vComp == null) {
@@ -533,6 +621,143 @@ public class GuiManager
         }
     }
 
+    private class ForwardAction
+    	extends AbstractAction
+    {
+    	public ForwardAction()
+    	{
+    		super("Forward");
+    	}
+
+    	public void actionPerformed(ActionEvent evt)
+    	{
+    		showForwardFrame();
+    		if(!forwardFrame.canceled)
+    		{
+    			String forwardTo = forwardFrame.getForwardUser();
+    	        UserCallControlEvent commEvt = new UserCallControlEvent(forwardTo);
+    	        for (int i = listeners.size() - 1; i >= 0; i--) {
+    	            ( (UserActionListener) listeners.get(i)).handleForwardRequest(
+    	                commEvt);
+    	        }
+    		}
+    	}
+    }
+    
+    private class BlockAction
+    extends AbstractAction
+    {
+    	public BlockAction()
+    	{
+    		super("Block");
+    	}
+
+    	public void actionPerformed(ActionEvent evt)
+    	{
+    		showBlockFrame();
+    		if(!blockFrame.canceled())
+    		{
+    			String user = null; 
+    			if(blockFrame.block())
+    				user = "BLOCK\n" + blockFrame.getUser() + "\n";
+    			else
+    				user = "UNBLOCK\n" + blockFrame.getUser() + "\n";
+    			
+    	        UserCallControlEvent commEvt = new UserCallControlEvent(user);
+    	        for (int i = listeners.size() - 1; i >= 0; i--) {
+    	            ( (UserActionListener) listeners.get(i)).handleBlockRequest(
+    	                commEvt);
+    	        }
+    		}
+    	}
+    }
+    
+    private class BlockedListAction
+    extends AbstractAction
+    {
+    	public BlockedListAction()
+    	{
+    		super("View Blocked Users");
+    	}
+
+    	public void actionPerformed(ActionEvent evt)
+    	{
+
+    	        UserCallControlEvent commEvt = new UserCallControlEvent("");
+    	        for (int i = listeners.size() - 1; i >= 0; i--) {
+    	            ( (UserActionListener) listeners.get(i)).handleBlockedListRequest(
+    	                commEvt);
+    	        }
+    	}
+    }
+    
+    private class FriendsListAction
+    extends AbstractAction
+    {
+    	public FriendsListAction()
+    	{
+    		super("View Friends");
+    	}
+
+    	public void actionPerformed(ActionEvent evt)
+    	{
+
+    	        UserCallControlEvent commEvt = new UserCallControlEvent("");
+    	        for (int i = listeners.size() - 1; i >= 0; i--) {
+    	            ( (UserActionListener) listeners.get(i)).handleFriendsListRequest(
+    	                commEvt);
+    	        }
+    	}
+    }
+    
+    private class PriceAction
+    extends AbstractAction
+    {
+    	public PriceAction()
+    	{
+    		super("View Total Cost");
+    	}
+
+    	public void actionPerformed(ActionEvent evt)
+    	{
+
+    	        UserCallControlEvent commEvt = new UserCallControlEvent("");
+    	        for (int i = listeners.size() - 1; i >= 0; i--) {
+    	            ( (UserActionListener) listeners.get(i)).handlePriceRequest(
+    	                commEvt);
+    	        }
+    	}
+    }
+    
+    private class FriendAction
+    extends AbstractAction
+    {
+    	public FriendAction()
+    	{
+    		super("Add Friends");
+    	}
+
+    	public void actionPerformed(ActionEvent evt)
+    	{
+    		showFriendFrame();
+    		if(!friendFrame.canceled())
+    		{
+    			String user = null; 
+    			if(friendFrame.block())
+    				user = "FRIEND\n" + friendFrame.getUser() + "\n";
+    			else
+    				user = "UNFRIEND\n" + friendFrame.getUser() + "\n";
+    			
+    	        UserCallControlEvent commEvt = new UserCallControlEvent(user);
+    	        for (int i = listeners.size() - 1; i >= 0; i--) {
+    	            ( (UserActionListener) listeners.get(i)).handleFriendRequest(
+    	                commEvt);
+    	        }
+    		}
+    	}
+    }
+    
+    
     private class ConfigMediaAction
         extends AbstractAction
     {
@@ -659,13 +884,13 @@ public class GuiManager
         }
     }
 
-    public void requestAuthentication(String realm,
+    public void requestAuthentication(SipManager sM,String realm,
                                       String userName,
                                       char[] password)
     {
         if (authenticationSplash != null)
             authenticationSplash.dispose();
-        authenticationSplash = new AuthenticationSplash(phoneFrame, true);
+        authenticationSplash = new AuthenticationSplash(phoneFrame, true, sM);
         if(userName != null)
             authenticationSplash.userNameTextField.setText(userName);
         if(password != null)
@@ -721,5 +946,10 @@ public class GuiManager
         }
     }
 
+    
+    public void showError(String error)
+    {
+    	JOptionPane.showMessageDialog(phoneFrame, error);
+    }
 
 }

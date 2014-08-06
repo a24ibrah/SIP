@@ -1,3 +1,11 @@
+/*
+ * 
+ * 	Raptis Dimos - Dimitrios (dimosrap@yahoo.gr) - 03109770
+ *  Lazos Philippos (plazos@gmail.com) - 03109082
+ * 	Omada 29
+ * 
+ */
+
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
@@ -62,6 +70,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 import java.awt.*;
+
 import net.java.sip.communicator.common.*;
 import net.java.sip.communicator.common.Console;
 import net.java.sip.communicator.gui.*;
@@ -71,7 +80,11 @@ import net.java.sip.communicator.media.event.*;
 import net.java.sip.communicator.sip.*;
 import net.java.sip.communicator.sip.event.*;
 import net.java.sip.communicator.sip.security.*;
+
 import java.io.IOException;
+
+import javax.swing.JOptionPane;
+
 import net.java.sip.communicator.plugin.setup.*;
 import net.java.sip.communicator.sip.simple.*;
 
@@ -566,6 +579,98 @@ public class SipCommunicator
         }
     }
 
+    public void handleForwardRequest(UserCallControlEvent evt)
+    {
+        try {
+        	console.logEntry();
+        	sipManager.sendInfo("FORWARD\n" + (String)evt.getSource() + "\n");
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    public void handleFriendRequest(UserCallControlEvent evt)
+    {
+        try {
+        	console.logEntry();
+        	sipManager.sendInfo((String)evt.getSource());
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    public void handleBlockRequest(UserCallControlEvent evt)
+    {
+        try {
+        	console.logEntry();
+        	sipManager.sendInfo((String)evt.getSource());
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    
+    public void handleBlockedListRequest(UserCallControlEvent evt)
+    {
+        try {
+        	console.logEntry();
+        	sipManager.sendInfo("GET_BLOCKED");
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    public void handleFriendsListRequest(UserCallControlEvent evt)
+    {
+        try {
+        	console.logEntry();
+        	sipManager.sendInfo("GET_FRIENDS");
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    public void handlePriceRequest(UserCallControlEvent evt)
+    {
+        try {
+        	console.logEntry();
+        	sipManager.sendInfo("GET_COST");
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    
 //======================= COMMUNICATIONS LISTENER ==============================
     public void callReceived(CallEvent evt)
     {
@@ -640,6 +745,65 @@ public class SipCommunicator
             console.logEntry();
             guiManager.setGlobalStatus(GuiManager.REGISTERED,
                                        evt.getReason());
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    public void receiveBlockedList(BlockedListEvent evt)
+    {
+        try {
+            console.logEntry();
+            String msg = evt.getBlockedList();
+            if(msg.equals("_WRONGUSERNAME"))
+            {
+            	guiManager.showError("Wrong Username!");
+            	System.exit(0);
+            }else if(msg.equals("_WRONGPASSWORD"))
+            {
+            	guiManager.showError("Wrong Password!");
+            	System.exit(0);
+            }else
+            	guiManager.showBlockedListFrame(evt.getBlockedList());
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    public void receiveFriendsList(BlockedListEvent evt)
+    {
+        try {
+            console.logEntry();
+            /*String msg = evt.getBlockedList();
+            if(msg.equals("_WRONGUSERNAME"))
+            {
+            	guiManager.showError("Wrong Username!");
+            }else if(msg.equals("_WRONGPASSWORD"))
+            {
+            	guiManager.showError("Wrong Password!");
+            }else*/
+            	guiManager.showFriendsListFrame(evt.getBlockedList());
+        }
+        finally {
+            console.logExit();
+        }
+    }
+    
+    public void receivePrice(BlockedListEvent evt)
+    {
+        try {
+            console.logEntry();
+            /*String msg = evt.getBlockedList();
+            if(msg.equals("_WRONGUSERNAME"))
+            {
+            	guiManager.showError("Wrong Username!");
+            }else if(msg.equals("_WRONGPASSWORD"))
+            {
+            	guiManager.showError("Wrong Password!");
+            }else*/
+            	guiManager.showPriceFrame(evt.getBlockedList());
         }
         finally {
             console.logExit();
@@ -793,7 +957,7 @@ public class SipCommunicator
         try{
             console.logEntry();
 
-            guiManager.requestAuthentication(realm,
+            guiManager.requestAuthentication(sipManager,realm,
                                              defaultValues.getUserName(),
                                              defaultValues.getPassword());
 

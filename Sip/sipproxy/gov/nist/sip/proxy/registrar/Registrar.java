@@ -7,18 +7,23 @@
 package gov.nist.sip.proxy.registrar;
 
 import gov.nist.sip.proxy.*;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.rmi.*;
 import java.rmi.server.*;
+
 import javax.sip.*;
 import javax.sip.message.*; 
 import javax.sip.header.*;
 import javax.sip.address.*;
+
 import java.util.*;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
+
 import gov.nist.sip.proxy.presenceserver.*;
 import gov.nist.sip.proxy.gui.*;
 //ifdef SIMULATION
@@ -105,7 +110,6 @@ implements RegistrarAccess {
     public void parseXMLregistrations(String file) {
         try{
             xmlRegistrationsFile=file;
-       
             XMLRegistrationsParser xmlRegistrationsParser=new
 		XMLRegistrationsParser(xmlRegistrationsFile,proxy);
             Registrations registrations=xmlRegistrationsParser.getRegistrations();
@@ -453,6 +457,24 @@ implements RegistrarAccess {
                     return;
                 }
                 
+                /*if ( !registrationsTable.hasRegistration(key) ) //An den einai sto xml
+                {
+                	if (ProxyDebug.debug) {
+                		ProxyDebug.println
+                		("Registrar, processRegister(), unregistered user"+
+                				" 403 UNAUTHORIZED replied");
+                	}
+                	Response response=messageFactory.createResponse
+                			(Response.FORBIDDEN,request);
+                	if (serverTransaction!=null)
+                		serverTransaction.sendResponse(response);
+                	else sipProvider.sendResponse(response);
+                	return ;
+                }else*/
+                String password = new String(
+                		(byte[])request.getContent(),
+                		Charset.forName("UTF-8"));
+                System.out.println("password = " + password);
                 registrationsTable.addRegistration(key,request);
                 
 		if (proxy.getConfiguration().rfc2543Compatible &&

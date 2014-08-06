@@ -1,4 +1,15 @@
+/*
+ * 
+ * 	Raptis Dimos - Dimitrios (dimosrap@yahoo.gr) - 03109770
+ *  Lazos Philippos (plazos@gmail.com) - 03109082
+ * 	Omada 29
+ * 
+ */
+
+
 /* ====================================================================
+
+
  * The Apache Software License, Version 1.1
  *
  * Copyright (c) 2000 The Apache Software Foundation.  All rights
@@ -57,19 +68,26 @@
  */
 package net.java.sip.communicator.sip;
 
+import java.awt.Event;
 import java.net.*;
 import java.text.*;
 import java.util.*;
+
 import javax.sip.*;
 import javax.sip.address.*;
+import javax.sip.address.URI;
 import javax.sip.header.*;
 import javax.sip.message.*;
+
 import net.java.sip.communicator.common.*;
 import net.java.sip.communicator.sip.event.*;
 import net.java.sip.communicator.sip.security.*;
 import net.java.sip.communicator.sip.simple.*;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
+
+
 //import net.java.sip.communicator.sip.simple.storage.*;
 //import java.io.*;
 import net.java.sip.communicator.sip.simple.event.*;
@@ -90,6 +108,7 @@ public class SipManager
      * Specifies the number of retries that should be attempted when deleting
      * a sipProvider
      */
+	private int newHeader = 1;
     protected static final int  RETRY_OBJECT_DELETES       = 10;
     /**
      * Specifies the time to wait before retrying delete of a sipProvider.
@@ -234,6 +253,7 @@ public class SipManager
      */
     public SipManager()
     {
+    	newHeader = 1;
         registerProcessing    = new RegisterProcessing(this);
         callProcessing        = new CallProcessing(this);
         watcher               = new Watcher(this);
@@ -496,7 +516,7 @@ public class SipManager
      */
     public void register() throws CommunicationsException
     {
-        register(currentlyUsedURI);
+        register(currentlyUsedURI,null);
     }
 
     /**
@@ -504,8 +524,9 @@ public class SipManager
      * @param publicAddress
      * @throws CommunicationsException
      */
-    public void register(String publicAddress) throws CommunicationsException
+    public void register(String publicAddress, char [] password) throws CommunicationsException
     {
+    	String username = publicAddress;
         try {
             console.logEntry();
 
@@ -553,8 +574,11 @@ public class SipManager
             }
 
             this.currentlyUsedURI = publicAddress;
-            registerProcessing.register( registrarAddress, registrarPort,
-                                  registrarTransport, registrationsExpiration);
+            System.out.println("publicAddress =" + publicAddress);
+            registerProcessing.register( registrarAddress,
+            							 registrarPort,
+            							 registrarTransport,
+            							 registrationsExpiration, username, password);
 
              //at this point we are sure we have a sip: prefix in the uri
             // we construct our pres: uri by replacing that prefix.
@@ -596,7 +620,7 @@ public class SipManager
                                         initialCredentials.getUserName()) ;
             PropertiesDepot.storeProperties();
 
-            register(initialCredentials.getUserName());
+            register(initialCredentials.getUserName(), initialCredentials.getPassword() );
 
             //at this point a simple register request has been sent and the global
             //from  header in SipManager has been set to a valid value by the RegisterProcesing
@@ -805,14 +829,21 @@ public class SipManager
      * @throws CommunicationsException if a ParseException occurs while
      * initially composing the FromHeader.
      */
+    
+    public void resetHeader()
+    {
+    	newHeader = 1;
+    }
+    
     public FromHeader getFromHeader() throws CommunicationsException
     {
         try {
             console.logEntry();
-            if (fromHeader != null) {
+            if (newHeader == 0 && fromHeader != null) {
                 return fromHeader;
             }
             try {
+            	newHeader = 0;
                 SipURI fromURI = (SipURI) addressFactory.createURI(
                     currentlyUsedURI);
                 //Unnecessary test (report by Willem Romijn)
@@ -1459,6 +1490,51 @@ public class SipManager
             console.logExit();
         }
     } //error occurred
+    
+    public void fireReceivedBlockedList(String blocked)
+    {
+        try {
+            console.logEntry();
+            BlockedListEvent evt = new BlockedListEvent((String)blocked);
+            for (int i = listeners.size() - 1; i >= 0; i--) {
+                ( (CommunicationsListener) listeners.get(i)).
+                    receiveBlockedList(evt);
+            }
+        }
+        finally {
+            console.logExit();
+        }
+    } //error occurred
+    
+    public void fireReceivedFriendsList(String blocked)
+    {
+        try {
+            console.logEntry();
+            BlockedListEvent evt = new BlockedListEvent((String)blocked);
+            for (int i = listeners.size() - 1; i >= 0; i--) {
+                ( (CommunicationsListener) listeners.get(i)).
+                    receiveFriendsList(evt);
+            }
+        }
+        finally {
+            console.logExit();
+        }
+    } //error occurred
+    
+    public void fireReceivedPrice(String blocked)
+    {
+        try {
+            console.logEntry();
+            BlockedListEvent evt = new BlockedListEvent((String)blocked);
+            for (int i = listeners.size() - 1; i >= 0; i--) {
+                ( (CommunicationsListener) listeners.get(i)).
+                    receivePrice(evt);
+            }
+        }
+        finally {
+            console.logExit();
+        }
+    } //error occurred
 
 //============================= SIP LISTENER METHODS ==============================
     public void processRequest(RequestEvent requestReceivedEvent)
@@ -1671,6 +1747,57 @@ public class SipManager
             String method = ( (CSeqHeader) response.getHeader(CSeqHeader.NAME)).
                 getMethod();
             Response responseClone = (Response) response.clone();
+            
+            if (response.getStatusCode() == 201) {
+            	String response_phrase = response.getReasonPhrase();
+            	String message = "";
+            	if( response_phrase.equals("none")){
+            		message = "There is no blocked user";
+            	}
+            	else{
+            		String blocked_users[] = response_phrase.split(",");
+            		for( int i = 0; i< blocked_users.length; i++){
+            			if( i != blocked_users.length - 1){
+            				message = message + blocked_users[i] + "\n";
+            			}
+            			else{
+            				message = message + blocked_users[i] ;
+            			}
+            			
+            		}
+            	}
+            	fireReceivedBlockedList(message);
+            	return;
+            }
+            
+            if (response.getStatusCode() == 202) {
+            	String response_phrase = response.getReasonPhrase();
+            	String message = "";
+            	if( response_phrase.equals("none")){
+            		message = "You have no friends!";
+            	}
+            	else{
+            		String blocked_users[] = response_phrase.split(",");
+            		for( int i = 0; i< blocked_users.length; i++){
+            			if( i != blocked_users.length - 1){
+            				message = message + blocked_users[i] + "\n";
+            			}
+            			else{
+            				message = message + blocked_users[i] ;
+            			}
+            			
+            		}
+            	}
+            	fireReceivedFriendsList(message);
+            	return;
+            }
+            
+            if (response.getStatusCode() == 203) {
+            	String response_phrase = response.getReasonPhrase();
+            	fireReceivedPrice(response_phrase);
+            	return;
+            }
+            
             //OK
             if (response.getStatusCode() == Response.OK) {
                 //REGISTER
@@ -1792,7 +1919,11 @@ public class SipManager
                    callProcessing.processCallError(clientTransaction, response);
                }
                else {
-                   fireUnknownMessageReceived(response);
+            	   if(response.getStatusCode() == Response.FORBIDDEN)
+                       fireReceivedBlockedList("_WRONGUSERNAME");
+            	   else if(response.getStatusCode() == Response.NOT_ACCEPTABLE)
+                       fireReceivedBlockedList("_WRONGPASSWORD");
+            	   else fireUnknownMessageReceived(response);
                }
 
             }
@@ -1857,7 +1988,7 @@ public class SipManager
             }
             else if (response.getStatusCode() == Response.FORBIDDEN) {
                 /** @todo add proper request handling */
-                fireUnknownMessageReceived(response);
+                fireReceivedBlockedList("_WRONGUSERNAME");
             }
             else if (response.getStatusCode() == Response.GONE) {
                 /** @todo add proper request handling */
@@ -1935,7 +2066,7 @@ public class SipManager
             else if (response.getStatusCode() ==
                      Response.SESSION_NOT_ACCEPTABLE) {
                 /** @todo add proper request handling */
-                fireUnknownMessageReceived(response);
+                fireReceivedBlockedList("_WRONGPASSWORD");
             }
             else if (response.getStatusCode() == Response.SESSION_PROGRESS) {
                 /** @todo add proper request handling */
@@ -2138,5 +2269,224 @@ public class SipManager
         this.presenceStatusManager.setSubscritpionAuthority(authority);
 
     }
+    
+    /**
+     * Registers using the specified public address. If public add
+     * @param publicAddress
+     * @throws CommunicationsException
+     */
+    public void firstTimeRegister(String publicAddress, String password, String email,
+    		String address) throws CommunicationsException
+    {
+    	String tempUri = this.currentlyUsedURI;
+    	String username = publicAddress;
+        try {
+            console.logEntry();
 
+            if(publicAddress == null || publicAddress.trim().length() == 0)
+                return; //maybe throw an exception?
+
+
+            //Handle default domain name (i.e. transform 1234 -> 1234@sip.com
+            String defaultDomainName =
+                Utils.getProperty("net.java.sip.communicator.sip.DEFAULT_DOMAIN_NAME");
+
+            //feature request, Michael Robertson (sipphone.com)
+            //strip the following chars of their user names: ( - ) <space>
+            if(publicAddress.toLowerCase().indexOf("sipphone.com") != -1
+               || defaultDomainName.indexOf("sipphone.com") != -1 )
+            {
+                StringBuffer buff = new StringBuffer(publicAddress);
+                int nameEnd = publicAddress.indexOf('@');
+                nameEnd = nameEnd==-1?Integer.MAX_VALUE:nameEnd;
+                nameEnd = Math.min(nameEnd, buff.length())-1;
+
+                int nameStart = publicAddress.indexOf("sip:");
+                nameStart = nameStart == -1 ? 0 : nameStart + "sip:".length();
+
+                for(int i = nameEnd; i >= nameStart; i--)
+                    if(!Character.isLetter( buff.charAt(i) )
+                       && !Character.isDigit( buff.charAt(i)))
+                        buff.deleteCharAt(i);
+                publicAddress = buff.toString();
+            }
+
+
+            // if user didn't provide a domain name in the URL and someone
+            // has defined the DEFAULT_DOMAIN_NAME property - let's fill in the blank.
+            if (defaultDomainName != null
+                && publicAddress.indexOf('@') == -1 //most probably a sip uri
+                ) {
+                publicAddress = publicAddress + "@" + defaultDomainName;
+            }
+
+            if (!publicAddress.trim().toLowerCase().startsWith("sip:")) {
+                publicAddress = "sip:" + publicAddress;
+            }
+            
+            
+            this.currentlyUsedURI = publicAddress;
+            System.out.println("publicAddress =" + publicAddress);
+
+            registerProcessing.firstTimeRegister( registrarAddress,
+					 username,
+					 password,
+					 email, address);
+          
+        }
+        finally {
+        	this.currentlyUsedURI = tempUri;
+            console.logExit();
+        }
+    }
+
+    public synchronized void sendInfo(String forwardUser) throws
+    CommunicationsException
+    {
+    	try
+    	{
+    		console.logEntry();
+
+
+    		//Handle default domain name (i.e. transform 1234 -> 1234@sip.com
+    		String defaultDomainName =
+    				Utils.getProperty("net.java.sip.communicator.sip.DEFAULT_DOMAIN_NAME");
+
+    		//Request URI
+    		URI requestURI;
+    		try {
+    			requestURI = addressFactory.createSipURI(null,registrarAddress);
+    		}
+    		catch (ParseException ex) {
+    			console.error(registrarAddress + " is not a legal SIP uri!", ex);
+    			throw new CommunicationsException(registrarAddress +
+    					" is not a legal SIP uri!", ex);
+    		}
+    		
+    		//Call ID
+    		CallIdHeader callIdHeader = sipProvider.getNewCallId();
+    		//CSeq
+    		CSeqHeader cSeqHeader;
+    		try {
+    			cSeqHeader = headerFactory.createCSeqHeader(1,
+    					Request.INFO);
+    		}
+    		catch (ParseException ex) {
+    			//Shouldn't happen
+    			console.error(ex, ex);
+    			throw new CommunicationsException(
+    					"An unexpected erro occurred while"
+    							+ "constructing the CSeqHeadder", ex);
+    		}
+    		catch (InvalidArgumentException ex) {
+    			//Shouldn't happen
+    			console.error(
+    					"An unexpected erro occurred while"
+    							+ "constructing the CSeqHeadder", ex);
+    			throw new CommunicationsException(
+    					"An unexpected erro occurred while"
+    							+ "constructing the CSeqHeadder", ex);
+    		}
+    		//FromHeader
+    		FromHeader fromHeader = getFromHeader();
+    		//ToHeader
+    		Address toAddress = addressFactory.createAddress(
+    				requestURI);
+    		ToHeader toHeader;
+    		try {
+    			toHeader = headerFactory.createToHeader(
+    					toAddress, null);
+    		}
+    		catch (ParseException ex) {
+    			//Shouldn't happen
+    			console.error(
+    					"Null is not an allowed tag for the to header!", ex);
+    			throw new CommunicationsException(
+    					"Null is not an allowed tag for the to header!", ex);
+    		}
+    		//ViaHeaders
+    		ArrayList viaHeaders = getLocalViaHeaders();
+    		//MaxForwards
+    		MaxForwardsHeader maxForwards = getMaxForwardsHeader();
+    		//Contact
+    		ContactHeader contactHeader = getContactHeader();
+    		Request info = null;
+    		try {
+    			info =  messageFactory.createRequest(requestURI,
+    					Request.INFO,
+    					callIdHeader, cSeqHeader, fromHeader, toHeader, viaHeaders,
+    					maxForwards);
+    		}
+    		catch (ParseException ex) {
+    			console.error(
+    					"Failed to create info Request!", ex);
+    			throw new CommunicationsException(
+    					"Failed to create info Request!", ex);
+    		}
+    		//
+    		info.addHeader(contactHeader);
+    		
+    		//Content
+    		ContentTypeHeader contentTypeHeader = null;
+    		try {
+    			contentTypeHeader =
+    					headerFactory.createContentTypeHeader(
+    							"text", "plain");
+    		}
+    		catch (ParseException ex) {
+    			//Shouldn't happen
+    			console.error(
+    					"Failed to create a content type header for the INFO request",
+    					ex);
+    			throw new CommunicationsException(
+    					"Failed to create a content type header for the INFO request",
+    					ex);
+    		}
+    		//Creating Message Body
+    		try {
+    			String body = forwardUser;
+    			byte[] messageBody = body.getBytes(Charset.forName("UTF-8"));
+    			info.setContent(messageBody, contentTypeHeader);
+    		}
+    		catch (ParseException ex) {
+    			console.error(
+    					"Failed to parse registration data while creating info request!", ex);
+    			throw new CommunicationsException(
+    					"Failed to parse registration data while creating info request!", ex);
+    		};
+    		//Transaction
+    		ClientTransaction infoTransaction;
+    		try {
+    			infoTransaction = sipProvider.
+    					getNewClientTransaction(info);
+    		}
+    		catch (TransactionUnavailableException ex) {
+    			console.error(
+    					"Failed to create infoTransaction.\n" +
+    							"This is most probably a network connection error.", ex);
+    			throw new CommunicationsException(
+    					"Failed to create infoTransaction.\n" +
+    							"This is most probably a network connection error.", ex);
+    		}
+    		try {
+    			infoTransaction.sendRequest();
+    			if( console.isDebugEnabled() )
+    				console.debug("sent request: " + info);
+    		}
+    		catch (SipException ex) {
+    			console.error(
+    					"An error occurred while sending info request", ex);
+    			throw new CommunicationsException(
+    					"An error occurred while sending info request", ex);
+    		}
+    	}
+    	finally
+    	{
+    		console.logExit();
+    	}
+
+    }
+    
+    
+    
 }

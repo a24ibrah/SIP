@@ -1,3 +1,11 @@
+/*
+ * 
+ * 	Raptis Dimos - Dimitrios (dimosrap@yahoo.gr) - 03109770
+ *  Lazos Philippos (plazos@gmail.com) - 03109082
+ * 	Omada 29
+ * 
+ */
+
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
@@ -76,6 +84,18 @@ public interface UserActionListener
     public void handleHangupRequest(UserCallControlEvent evt);
 
     public void handleAnswerRequest(UserCallControlEvent evt);
+    
+    public void handleForwardRequest(UserCallControlEvent evt);
+    
+    public void handleBlockRequest(UserCallControlEvent evt);
+    
+    public void handleBlockedListRequest(UserCallControlEvent evt);
+    
+    public void handleFriendsListRequest(UserCallControlEvent evt);
+    
+    public void handlePriceRequest(UserCallControlEvent evt);
+    
+    public void handleFriendRequest(UserCallControlEvent evt);
 
     public void handleExitRequest();
 

@@ -1,3 +1,11 @@
+/*
+ * 
+ * 	Raptis Dimos - Dimitrios (dimosrap@yahoo.gr) - 03109770
+ *  Lazos Philippos (plazos@gmail.com) - 03109082
+ * 	Omada 29
+ * 
+ */
+
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
@@ -93,6 +101,54 @@ class MenuBar
 
     }
 
+    void addForwardAction(Action action)
+    {
+        JMenuItem config = new JMenuItem(action);
+        config.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
+
+        settingsMenu.add(config);
+    }
+    
+    void addBlockAction(Action action)
+    {
+        JMenuItem config = new JMenuItem(action);
+        config.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0));
+
+        settingsMenu.add(config);
+    }
+    
+    void addFriendAction(Action action)
+    {
+        JMenuItem config = new JMenuItem(action);
+        config.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0));
+
+        settingsMenu.add(config);
+    }
+    
+    void addBlockedListAction(Action action)
+    {
+        JMenuItem config = new JMenuItem(action);
+        config.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0));
+
+        settingsMenu.add(config);
+    }
+    
+    void addFriendsListAction(Action action)
+    {
+        JMenuItem config = new JMenuItem(action);
+        config.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0));
+
+        settingsMenu.add(config);
+    }
+    
+    void addPriceAction(Action action)
+    {
+        JMenuItem config = new JMenuItem(action);
+        config.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0));
+
+        settingsMenu.add(config);
+    }
+    
     public void setConfigFrame(ConfigFrame configFrame)
     {
         this.configFrame = configFrame;

@@ -1,3 +1,11 @@
+/*
+ * 
+ * 	Raptis Dimos - Dimitrios (dimosrap@yahoo.gr) - 03109770
+ *  Lazos Philippos (plazos@gmail.com) - 03109082
+ * 	Omada 29
+ * 
+ */
+
 /* ====================================================================
  * The Apache Software License, Version 1.1
  *
@@ -62,11 +70,14 @@ import java.awt.*;
 import java.awt.geom.*;
 import java.awt.event.*;
 import java.util.*;
+
 import javax.swing.*;
+
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
-import net.java.sip.communicator.common.Utils;
+
 import net.java.sip.communicator.common.*;
+import net.java.sip.communicator.sip.SipManager;
 
 //import samples.accessory.StringGridBagLayout;
 
@@ -81,6 +92,12 @@ public class AuthenticationSplash
     JTextField userNameTextField = null;
     JLabel     realmValueLabel = null;
     JPasswordField passwordTextField = null;
+    SipManager sipManager = null;
+    
+    /**
+     * Parent Frame
+     */
+    private Frame parent;
 
     /**
      * Resource bundle with default locale
@@ -112,18 +129,29 @@ public class AuthenticationSplash
      * not be internationalized.
      */
     private String CMD_LOGIN = "cmd.login" /*NOI18N*/;
+    
+    /**
+     * Command string for a login action (e.g., a button).
+     * This string is never presented to the user and should
+     * not be internationalized.
+     */
+    private String CMD_REGISTER = "cmd.register" /*NOI18N*/;
 
     // Components we need to manipulate after creation
     private JButton loginButton = null;
     private JButton cancelButton = null;
     private JButton helpButton = null;
+    private JButton registerButton = null;
+    
 
     /**
      * Creates new form AuthenticationSplash
      */
-    public AuthenticationSplash(Frame parent, boolean modal)
+    public AuthenticationSplash(Frame parent, boolean modal, SipManager sM)
     {
         super(parent, modal);
+        this.parent = parent;
+        this.sipManager = sM;
         initResources();
         initComponents();
         pack();
@@ -367,6 +395,20 @@ public class AuthenticationSplash
             }
         });
         //buttonPanel.add(helpButton);
+        
+        registerButton = new JButton();
+        registerButton.setMnemonic('R');
+        registerButton.setText("Register");
+        registerButton.setActionCommand(CMD_REGISTER);
+        registerButton.addActionListener(new ActionListener()
+        {
+        	public void actionPerformed(ActionEvent event)
+        	{
+        		dialogDone(event);
+        	}
+        });
+        buttonPanel.add(registerButton);
+        
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 3;
@@ -381,6 +423,8 @@ public class AuthenticationSplash
 
         setFocusTraversalPolicy(new FocusTraversalPol());
 
+
+        
     } // initComponents()
 
     /**
@@ -462,8 +506,20 @@ public class AuthenticationSplash
             userName = userNameTextField.getText();
             password = passwordTextField.getPassword();
         }
-        setVisible(false);
-        dispose();
+        
+        if (cmd.equals(CMD_REGISTER))
+        {
+        	setModal(false);
+        	RegisterSplash rS = new RegisterSplash(
+        			(Frame)SwingUtilities.getWindowAncestor(this),
+        			true, sipManager);
+        	setModal(true);
+        }
+        else
+        {
+        	setVisible(false);
+        	dispose();
+        }
     } // dialogDone()
 
     /**
@@ -484,7 +540,7 @@ public class AuthenticationSplash
         frame.pack();
         frame.setVisible(false);
 
-        AuthenticationSplash dialog = new AuthenticationSplash(frame, true);
+        AuthenticationSplash dialog = new AuthenticationSplash(frame, true, null);
         dialog.addWindowListener(new WindowAdapter()
         {
             public void windowClosing(WindowEvent event)
