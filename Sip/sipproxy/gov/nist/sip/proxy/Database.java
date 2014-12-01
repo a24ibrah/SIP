@@ -26,7 +26,7 @@ private static Connection conn ;
         driver = "com.mysql.jdbc.Driver";
         url = "jdbc:mysql://localhost:3306/proxy";
         user = "root";
-        password = "28011991";
+        password = "";
         conn = null;
         
     }
@@ -797,7 +797,7 @@ private static Connection conn ;
         
         Database    test = new Database();
         String username = new String("dimos");
-        String passwd = new String("1991");
+        String passwd = new String("dimos_password");
         String address = new String("athens");
         String email = new String("dimosrap@yahoo.gr");
         boolean query_flag;
@@ -810,73 +810,6 @@ private static Connection conn ;
         
         test.createFriendship("jimmy","plazos");
         System.out.println("Friendship was created between jimmy and plazos");
-        
-        /*String blocked[] = test.getAllFriends("jimmy");	//getAllBlocked..
-        System.out.println( "jimmy has friends : " );
-        for(int i=0;i < blocked.length; i++){
-        	System.out.print(blocked[i] + "  " );
-        }*/
-        
-        
-        /*if( test.existsCall("123") == false ){
-        	test.insertCall("123", "jimmy", "plazos", 100);
-        }
-        
-        boolean flag =  test.updateFinishedCall("123", "jimmy", "plazos", 150, 2);*/
-        
-        //test.insertForwardingPair("jimmy", "kostas");
-        
-        /*long time = System.currentTimeMillis()/1000;
-        test.insertCall("jimmy","plazos",time );
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
-        /*time = System.currentTimeMillis()/1000;
-        test.updateFinishedCall("dimos", "lazos", time, 5);*/
-        
-        /*String last = test.getTheLastForwardeeFrom("maria");
-        System.out.println("Send to " + last);
-        
-        query_flag = test.userForwards("dimos");
-        if(query_flag == true ){
-            String forwardee = test.ForwardsTo("philipos");
-            System.out.println("forwardee is " + forwardee);
-        }
-        else{
-            System.out.println("user is not forwarding!!");
-        }*/
-        //query_flag = test.UserIsBlockedBy("phillipos", "dimos");
-
-        
-        /*query_flag = test.InsertUser(username, passwd, address, email);
-        
-        if(query_flag == true ){
-            System.out.println("Insert done!!");
-        }
-        else{
-            System.out.println("problem with insert!!");
-        }
-        
-        query_flag = test.userExists(username);
-        
-        if(query_flag == true ){
-            System.out.println("The user with the given data exists!!");
-        }
-        else{
-            System.out.println("No user with the given data exists!!");
-        }
-        
-        query_flag = test.DeleteUser(username);
-        
-        
-        if(query_flag == true ){
-            System.out.println("The user with the given data is deleted!!");
-        }
-        else{
-            System.out.println("Problem with the deletion!!");
-        }       */
               
     }
     
